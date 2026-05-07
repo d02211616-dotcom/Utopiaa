@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Utopiaa — your calm corner of the internet</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@500;600&display=swap');
+        
+        :root {
+            --accent: #60a5fa;
+            --bg: #0a0a0a;
+            --text: #e0e0e0;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', system-ui;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        canvas#stars { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+        
+        .logo, h2, .status, .welcome, .footer, .app-btn, .disguise-btn {
+            text-shadow: 0 0 8px var(--accent), 0 0 16px var(--accent), 0 0 25px rgba(96,165,250,0.4);
+        }
+        
+        header {
+            position: relative; z-index: 10;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .logo { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 600; letter-spacing: -1px; cursor: pointer; }
+        .status { font-size: 15px; }
+        .status span { color: var(--accent); }
+        
+        .welcome { position: absolute; top: 90px; left: 40px; font-size: 15px; opacity: 0.9; z-index: 10; }
+        
+        .main { position: relative; z-index: 10; display: flex; height: calc(100vh - 68px); margin-top: 50px; }
+        
+        .sidebar { width: 280px; background: rgba(15,15,20,0.95); padding: 30px 25px; border-right: 1px solid rgba(255,255,255,0.1); }
+        
+        .viewport-container { flex: 1; display: flex; flex-direction: column; padding: 20px 40px 20px 20px; }
+        
+        #viewport { flex: 1; background: #111; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; }
+        
+        .url-bar {
+            width: 100%; padding: 14px 20px; background: #111; border: 1px solid rgba(255,255,255,0.2);
+            color: #fff; margin-bottom: 20px; border-radius: 8px; font-size: 15px;
+        }
+        
+        .quick-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+        }
+        
+        .app-btn {
+            background: rgba(30,30,40,0.8); border: 1px solid rgba(255,255,255,0.1);
+            padding: 18px 8px; text-align: center; border-radius: 8px;
+            cursor: pointer; transition: all 0.2s; font-size: 13px;
+        }
+        
+        .app-btn:hover { background: rgba(255,255,255,0.12); transform: translateY(-2px); }
+        
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 100; align-items: center; justify-content: center;
+        }
+        
+        .modal-content {
+            background: #111; padding: 30px; border-radius: 12px; border: 1px solid var(--accent);
+            max-width: 560px; width: 90%; max-height: 92vh; overflow-y: auto;
+        }
+        
+        .disguise-btn {
+            width: 100%; padding: 16px 20px; margin: 8px 0; background: rgba(30,30,45,0.8);
+            border: 1px solid rgba(96,165,250,0.3); color: white; border-radius: 10px;
+            cursor: pointer; font-size: 15px; text-align: left; transition: all 0.25s;
+        }
+        
+        .disguise-btn:hover {
+            background: rgba(96,165,250,0.15); border-color: var(--accent);
+            transform: translateX(8px);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="stars"></canvas>
+    
+    <!-- Password Screen -->
+    <div id="passwordScreen" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#0a0a0a; z-index:999; display:flex; align-items:center; justify-content:center; flex-direction:column;">
+        <h2>Utopiaa</h2>
+        <p style="margin:20px 0;">Enter Password</p>
+        <input type="password" id="passInput" placeholder="Password" style="padding:14px; width:300px; background:#111; border:2px solid #60a5fa; color:white; border-radius:8px; text-align:center;">
+        <button onclick="checkPassword()" style="margin-top:20px; padding:12px 40px; background:#60a5fa; color:black; border:none; border-radius:8px; cursor:pointer;">UNLOCK</button>
+    </div>
+    
+    <!-- Main Content -->
+    <div id="mainContent" style="display:none;">
+        <header>
+            <div class="logo" onclick="toggleSettings()">Utopiaa</div>
+            <div class="status"><span>● Proxy on</span> <span>● Untraceable on</span> <span onclick="toggleSettings()" style="cursor:pointer; text-decoration:underline;">⚙ Settings</span></div>
+        </header>
+        
+        <div class="welcome" id="welcomeText">Welcome</div>
+        
+        <div class="main">
+            <div class="sidebar">
+                <h2>Quick apps</h2>
+                <div class="quick-grid" id="quickApps"></div>
+            </div>
+            
+            <div class="viewport-container">
+                <input type="text" id="urlInput" class="url-bar" placeholder="Enter URL here..." onkeypress="if(event.key==='Enter') launchProxy()">
+                <iframe id="viewport" src="https://www.google.com/webhp?igu=1" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <h2>Settings</h2>
+            
+            <h3>Disguise Mode</h3>
+            <button class="disguise-btn" onclick="applyDisguise('Khan Academy')">🏫 Khan Academy</button>
+            <button class="disguise-btn" onclick="applyDisguise('Lexia PowerUp')">📖 Lexia PowerUp</button>
+            <button class="disguise-btn" onclick="applyDisguise('IXL')">📊 IXL</button>
+            <button class="disguise-btn" onclick="applyDisguise('Zearn')">🔢 Zearn</button>
+            <button class="disguise-btn" onclick="applyDisguise('Google Classroom')">📚 Google Classroom</button>
+            <button class="disguise-btn" onclick="applyDisguise('About:Blank')">⬜ About:Blank</button>
+            <button class="disguise-btn" onclick="applyDisguise('Default')">🌌 Reset to Utopiaa</button>
+
+            <!-- Admin Panel -->
+            <div style="margin-top:35px; padding:20px; background:rgba(153,27,27,0.15); border:1px solid #f87171; border-radius:12px;">
+                <h3 style="color:#f87171;">🔐 ADMIN MONITORING</h3>
+                
+                <input type="password" id="adminPass" placeholder="Admin Password" style="width:100%; padding:12px; margin:12px 0; background:#1f1f1f; border:1px solid #f87171; color:white; border-radius:8px;">
+                <button onclick="activateAdmin()" style="width:100%; padding:12px; background:#f87171; color:black; border:none; border-radius:8px;">LOGIN AS ADMIN</button>
+                
+                <div id="adminControls" style="display:none; margin-top:20px;">
+                    <h4 style="color:#fda4af;">Live User Activity</h4>
+                    <div id="userList" style="background:#1a1a1a; padding:12px; border-radius:8px; max-height:320px; overflow-y:auto;"></div>
+                    
+                    <button onclick="kickEveryone()" style="width:100%; padding:16px; margin-top:15px; background:#991b1b; color:white; border:none; border-radius:8px; font-weight:bold;">
+                        KICK EVERYONE
+                    </button>
+                </div>
+            </div>
+            
+            <button onclick="toggleSettings()" style="margin-top:25px; width:100%; padding:14px; background:#333; border:none; border-radius:8px;">Close</button>
+        </div>
+    </div>
+    
+    <script>
+        // === Password Protection ===
+        function checkPassword() {
+            if (document.getElementById('passInput').value.toLowerCase() === "liberation") {
+                document.getElementById('passwordScreen').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+            } else {
+                alert("Incorrect password.");
+            }
+            document.getElementById('passInput').value = '';
+        }
+
+        // === Admin Features ===
+        let activeUsers = [
+            {id: 1, name: "Student_4721", activity: "YouTube"},
+            {id: 2, name: "User_9184", activity: "Spotify"},
+            {id: 3, name: "Guest_334", activity: "Cineby.sc"}
+        ];
+
+        function renderUserList() {
+            const container = document.getElementById('userList');
+            let html = '';
+            activeUsers.forEach(user => {
+                html += `
+                    <div style="padding:10px; background:#222; margin:6px 0; border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
+                        <div><strong>${user.name}</strong><br><small style="color:#4ade80">${user.activity}</small></div>
+                        <button onclick="kickUser(${user.id})" style="padding:5px 12px; background:#ef4444; color:white; border:none; border-radius:6px; cursor:pointer;">Kick</button>
+                    </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function kickUser(id) {
+            if (confirm("Kick this user?")) {
+                activeUsers = activeUsers.filter(u => u.id !== id);
+                renderUserList();
+            }
+        }
+
+        function kickEveryone() {
+            if (confirm("Kick ALL users?")) {
+                activeUsers = [];
+                renderUserList();
+                alert("All users kicked.");
+            }
+        }
+
+        function activateAdmin() {
+            if (document.getElementById('adminPass').value === "Omega") {
+                document.getElementById('adminControls').style.display = 'block';
+                renderUserList();
+            } else {
+                alert("Incorrect Admin Password");
+            }
+        }
+
+        // Proxy Functions
+        function launchProxy() {
+            let url = document.getElementById('urlInput').value.trim();
+            if (!url) return;
+            if (!url.startsWith('http')) url = 'https://' + url;
+            document.getElementById('viewport').src = `https://www.croxyproxy.com/?url=${encodeURIComponent(url)}`;
+        }
+
+        function quickProxy(target) {
+            document.getElementById('viewport').src = `https://www.croxyproxy.com/?url=${encodeURIComponent(target)}`;
+        }
+
+        function toggleSettings() {
+            const modal = document.getElementById('settingsModal');
+            modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
+        }
+
+        function applyDisguise(mode) {
+            if (mode === "About:Blank") {
+                document.getElementById('viewport').src = "about:blank";
+                document.title = "New Tab";
+                document.querySelector('.logo').textContent = "New Tab";
+            } else {
+                document.title = mode;
+                document.querySelector('.logo').textContent = mode;
+            }
+            toggleSettings();
+        }
+
+        // Starfield
+        window.onload = () => {
+            const canvas = document.getElementById('stars');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                requestAnimationFrame(animate);
+            }
+            animate();
+            
+            document.getElementById('passwordScreen').style.display = 'flex';
+        };
+    </script>
+</body>
+</html>
